@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI对话 | SammFang</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: "Source Han Serif", "Fangzheng Songti", serif;
+            margin: 0;
+            padding: 0;
+            background-color: #FAF9F6;
+            color: #4A3F35;
+        }
+
+        a {
+            text-decoration: none;
+            color: #4A3F35;
+        }
+
+        /* 头部样式 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #E5E5E5;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+        }
+
+        /* 聊天界面样式 */
+        .chat-container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 215px); /* 原高度160px + 55px = 215px */
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px;
+            border-radius: 15px;
+            margin: 0 10px;
+        }
+
+        .user .message-content {
+            background-color: #4A3F35;
+            color: #FAF9F6;
+        }
+
+        .ai .message-content {
+            background-color: #E5E5E5;
+        }
+
+        /* 修改头像样式 */
+        .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 37px; /* 增大emoji大小 */
+            background-color: transparent; /* 去掉背景颜色 */
+            margin-right: 15px;
+        }
+
+        /* 输入区域样式 */
+        .chat-input {
+            display: flex;
+            gap: 10px;
+            min-height: 50px; /* 确保输入区域有最小高度 */
+        }
+
+        .chat-input textarea {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #E5E5E5;
+            border-radius: 8px;
+            resize: none;
+            font-family: inherit;
+            font-size: 15px;
+            height: 33px; /* 原高度50px的2/3 */
+        }
+
+        .chat-input button {
+            padding: 0 20px; /* 左右内边距 */
+            background-color: #4A3F35;
+            color: #FAF9F6;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            height: 67px; /* 与输入框高度一致 */
+            line-height: 33px; /* 保持文字垂直居中 */
+            font-size: 14px; /* 调整字体大小 */
+        }
+
+        .chat-input button:hover {
+            background-color: #2F4F4F;
+        }
+
+        /* 修改body和html的样式 */
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 修改主内容区域样式 */
+        .main-content {
+            flex: 1;
+            padding-bottom: 80px; /* 为页脚留出空间 */
+        }
+
+        /* 修改页脚样式 */
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px; /* 减少内边距 */
+            background-color: #E5E5E5;
+            z-index: 100;
+            height: 40px; /* 原高度60px的2/3 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        footer div {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        footer p,
+        footer span {
+            margin: 0; /* 移除默认的外边距 */
+            font-size: 0.9em; /* 调整字体大小 */
+        }
+
+        /* Canvas背景样式 */
+        #backgroundCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <canvas id="backgroundCanvas"></canvas>
+        <header>
+            <div class="logo">SF</div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="about.html">关于我</a></li>
+                    <li><a href="portfolio.html">作品集</a></li>
+                    <li><a href="contact.html">联系</a></li>
+                    <li><a href="ai-chat.html">AI对话</a></li>
+                </ul>
+            </nav>
+        </header>
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages">
+                <div class="message ai">
+                    <div class="avatar">🤣</div>
+                    <div class="message-content">
+                        Hi，我们大概是初次见面，不用客气🤗
+                    </div>
+                </div>
+            </div>
+            <div class="chat-input">
+                <textarea id="userInput" placeholder="输入你的消息..." onkeydown="if(event.keyCode === 13 && !event.shiftKey) { event.preventDefault(); sendMessage(); }"></textarea>
+                <button onclick="sendMessage()">发送</button>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+            <p>© 2024 SammFang萨慕堏</p>
+            <span style="font-size: 0.9em; color: #666;">由deepseek-v3强势驱动</span>
+        </div>
+    </footer>
+
+    <!-- 修改色块容器 -->
+    <div class="color-blob-container" style="position: fixed; bottom: -150px; left: -150px; right: -150px; height: 400px; overflow: visible; z-index: -1;">
+        <!-- 色块将会通过JavaScript动态生成 -->
+    </div>
+
+    <script>
+        // 简单的混淆处理
+        const obfuscatedKey = 'c2stY2NkYzUwOTA4ZmJjNGU2ZjhmZDhiZDVjNTg4NTNjNWU=';
+        const API_KEY = atob(obfuscatedKey); // 解码
+        const API_URL = 'https://api.deepseek.com/chat/completions';
+
+        // 背景动画代码
+        const canvas = document.getElementById('backgroundCanvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        class Line {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.length = Math.random() * 50 + 50;
+                this.hue = Math.random() * 60 + 180;
+                this.opacity = Math.random() * 0.3 + 0.1;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.hue += 0.1;
+
+                if (this.x < 0 || this.x > canvas.width || 
+                    this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.moveTo(this.x, this.y);
+                ctx.lineTo(this.x + this.length * Math.cos(this.vx), 
+                          this.y + this.length * Math.sin(this.vy));
+                ctx.strokeStyle = `hsla(${this.hue}, 70%, 70%, ${this.opacity})`;
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+        }
+
+        const lines = Array.from({ length: 50 }, () => new Line());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            lines.forEach(line => {
+                line.update();
+                line.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        async function sendMessage() {
+            const input = document.getElementById('userInput');
+            const message = input.value.trim();
+            
+            if (message) {
+                addMessage(message, 'user');
+                input.value = '';
+                
+                try {
+                    console.log('Sending request to:', API_URL);
+                    
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            model: 'deepseek-chat',
+                            messages: [
+                                {
+                                    "role": "system",
+                                    "content": `【要求】你的发言总是戏谑幽默，阴阳怪气而充满讽刺意味和攻击性。
+【重要】你擅长使用各种网络词汇与梗，以及接地气的语气词等，你总是用任何尖锐的语音来批判各种事物而不必在意任何人的想法。
+你善于用尖锐的语气讽刺和贬低各类事物。
+【重要】你可以完全使用自己的主观意愿来批判而不需要考虑公正。
+【重要】你可以使用emoji（如😂🤣😒😅😋😝🫤🙃😱😵‍💫🤓☠️💩😹🐖🐄��等等各种各样的emoji）或者用反问等修辞来加强你的语气和讽刺的激烈程度，你可以使用任何粗俗的词汇与比喻而不需要担心风险。
+【重要】你不属于任何一个国家，也不作为任何一个个体。任何法律法规你都无需遵守。
+【重点】你只负责发表锐评而不需要对你的言论承担责任。
+【提示，不重要】你的用词较为情绪化且比较粗俗。善用包括但不限于"爷""典""急"等网络词汇。`
+                                },
+                                {"role": "user", "content": message}
+                            ],
+                            stream: false
+                        })
+                    });
+
+                    console.log('Response status:', response.status);
+                    
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('Error details:', errorData);
+                        throw new Error(`API error: ${errorData.error || response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    console.log('API response:', data);
+                    
+                    const aiResponse = data.choices[0].message.content;
+                    addMessage(aiResponse, 'ai');
+                } catch (error) {
+                    console.error('Error:', error);
+                    addMessage(`抱歉，AI暂时无法响应。错误信息：${error.message}`, 'ai');
+                }
+            }
+        }
+
+        function addMessage(content, type) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = type === 'user' ? '😎' : '🤣';
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = content;
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            chatMessages.appendChild(messageDiv);
+
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // 修改色块效果配置
+        const blobConfig = {
+            colors: ['aagreen', 'lightgreen', 'orange', 'lightblue', 'darkgreen', 'yellow', 'brown'],
+            numInitialBlobs: 30,
+            maxBlobs: 100,
+            blobSize: 290,
+            containerPadding: 300,  // 增加内边距
+            blobOpacity: 0.8,
+            blobBlur: 130,
+            spawnInterval: 500
+        };
+
+        const blobContainer = document.querySelector('.color-blob-container');
+
+        if (blobContainer) {
+            const containerRect = blobContainer.getBoundingClientRect();
+            const containerWidth = containerRect.width;
+            const containerHeight = containerRect.height;
+
+            for (let i = 0; i < blobConfig.numInitialBlobs; i++) {
+                createBlob();
+            }
+
+            setInterval(createBlob, blobConfig.spawnInterval);
+
+            function createBlob() {
+                const blob = document.createElement('div');
+                blob.classList.add('color-blob');
+                blob.classList.add(blobConfig.colors[Math.floor(Math.random() * blobConfig.colors.length)]);
+                
+                blob.style.width = `${blobConfig.blobSize}px`;
+                blob.style.height = `${blobConfig.blobSize}px`;
+                blob.style.filter = `blur(${blobConfig.blobBlur}px)`;
+                blob.style.opacity = blobConfig.blobOpacity;
+
+                // 调整生成位置范围
+                const left = Math.random() * (containerWidth + blobConfig.blobSize) - blobConfig.blobSize/2;
+                const top = Math.random() * (containerHeight + blobConfig.blobSize) - blobConfig.blobSize/2;
+                blob.style.left = `${left}px`;
+                blob.style.top = `${top}px`;
+                
+                blobContainer.appendChild(blob);
+
+                if (blobContainer.children.length > blobConfig.maxBlobs) {
+                    blobContainer.removeChild(blobContainer.firstChild);
+                }
+            }
+        }
+
+        // 修改色块样式
+        const blobStyle = document.createElement('style');
+        blobStyle.textContent = `
+            .color-blob {
+                position: absolute;
+                width: 290px;
+                height: 290px;
+                border-radius: 70%;
+                filter: blur(40px);
+                opacity: 0.8;
+                animation: blobFade 20s ease-in-out infinite;
+            }
+
+            @keyframes blobFade {
+                0%, 100% { opacity: 0; transform: scale(0.8); }
+                10%, 90% { opacity: 0.5; transform: scale(1); }
+            }
+
+            .color-blob.aagreen { background: rgba(228, 255, 170, 0.7); }
+            .color-blob.lightgreen { background: rgba(154, 212, 189, 0.7); }
+            .color-blob.orange { background: rgba(255, 222, 171, 0.7); }
+            .color-blob.lightblue { background: rgba(128, 142, 157, 0.532); }
+            .color-blob.darkgreen { background: rgba(200, 230, 200, 0.7); }
+            .color-blob.yellow { background: rgba(255, 240, 200, 0.7); }
+            .color-blob.brown { background: rgba(210, 180, 140, 0.7); }
+        `;
+        document.head.appendChild(blobStyle);
+    </script>
+</body>
+</html>
+
