@@ -968,14 +968,13 @@
                     // 移除遮罩
                     overlay.style.display = 'none';
                     
-                    // 显示背景图片
-                    backgroundImage.style.opacity = '0.3';
+                    // 显示背景图片，降低透明度到10%
+                    backgroundImage.style.opacity = '0.1';
                     
-                    // 应用颜色滤镜，将图片颜色改为 B8B2A7 浅棕色
-                    backgroundImage.style.filter = 'opacity(0.2) sepia(0.8) brightness(1.1) saturate(0.2)';
-                    // 添加背景色，确保颜色接近 B8B2A7
-                    backgroundImage.style.backgroundColor = '#B8B2A7';
-                    backgroundImage.style.mixBlendMode = 'multiply';
+                    // 取消之前的颜色滤镜
+                    backgroundImage.style.filter = '';
+                    backgroundImage.style.backgroundColor = 'transparent';
+                    backgroundImage.style.mixBlendMode = 'normal';
                 }, 200);
             }, { once: true }); // 只触发一次
         });
