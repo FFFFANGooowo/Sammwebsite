@@ -29,7 +29,7 @@
             background-color: #E5E5E5;
         }
 
-        。logo {
+        .logo {
             font-size: 24px;
             font-weight: bold;
         }
@@ -192,6 +192,69 @@
             z-index: -1;
             opacity: 0.3;
         }
+
+        /* 色块样式 */
+        .color-blob-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 400px;
+            z-index: -2;
+            overflow: visible; /* 允许内容溢出 */
+        }
+
+        .color-blob {
+            position: absolute;
+            width: 290px;
+            height: 290px;
+            border-radius: 70%;
+            filter: blur(40px);
+            opacity: 0.8;
+            animation: blobFade 20s ease-in-out infinite;
+            pointer-events: none; /* 确保色块不会干扰鼠标事件 */
+        }
+
+        @keyframes blobFade {
+            0%, 100% { opacity: 0; transform: scale(0.8); }
+            10%, 90% { opacity: 0.5; transform: scale(1); }
+        }
+
+        .color-blob.aagreen { background: rgba(228, 255, 170, 0.7); }
+        .color-blob.lightgreen { background: rgba(154, 212, 189, 0.7); }
+        .color-blob.orange { background: rgba(255, 222, 171, 0.7); }
+        .color-blob.lightblue { background: rgba(128, 142, 157, 0.532); }
+        .color-blob.darkgreen { background: rgba(200, 230, 200, 0.7); }
+        .color-blob.yellow { background: rgba(255, 240, 200, 0.7); }
+        .color-blob.brown { background: rgba(210, 180, 140, 0.7); }
+
+        .typing-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            margin: 0 2px;
+            opacity: 0.4;
+            animation: emojiThinking 2s infinite;
+            font-size: 18px;
+            transform-origin: center;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes emojiThinking {
+            0% { opacity: 0.4; transform: rotate(0deg) scale(1); }
+            50% { opacity: 1; transform: rotate(180deg) scale(1.2); }
+            100% { opacity: 0.4; transform: rotate(360deg) scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -214,7 +277,7 @@
                 <div class="message ai">
                     <div class="avatar">🤣</div>
                     <div class="message-content">
-                        Hi，我们大概是初次见面，不用客气🤗
+                        你好，我们大概率是第一次见面。不必客气🤗
                     </div>
                 </div>
             </div>
@@ -231,12 +294,14 @@
         </div>
     </footer>
 
-    <!-- 修改色块容器 -->
-    <div class="color-blob-container" style="position: fixed; bottom: -150px; left: -150px; right: -150px; height: 400px; overflow: visible; z-index: -1;">
+    <!-- 色块容器 -->
+    <div class="color-blob-container">
         <!-- 色块将会通过JavaScript动态生成 -->
     </div>
 
     <script>
+        "use strict";
+
         // 简单的混淆处理
         const obfuscatedKey = 'c2stY2NkYzUwOTA4ZmJjNGU2ZjhmZDhiZDVjNTg4NTNjNWU=';
         const API_KEY = atob(obfuscatedKey); // 解码
@@ -284,7 +349,7 @@
                 ctx.moveTo(this.x, this.y);
                 ctx.lineTo(this.x + this.length * Math.cos(this.vx), 
                           this.y + this.length * Math.sin(this.vy));
-                ctx.strokeStyle = `hsla(${this.hue}, 70%, 70%, ${this.opacity})`;
+                ctx.strokeStyle = "hsla(" + this.hue + ", 70%, 70%, " + this.opacity + ")";
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
@@ -314,30 +379,34 @@
                 try {
                     console.log('Sending request to:', API_URL);
                     
+                    // 创建空的AI消息div，准备接收流式内容
+                    const aiMessageId = 'ai-message-' + Date.now();
+                    addMessageContainer('', 'ai', aiMessageId);
+                    
                     const response = await fetch(API_URL, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${API_KEY}`
+                            'Authorization': "Bearer " + API_KEY
                         },
                         body: JSON.stringify({
                             model: 'deepseek-chat',
                             messages: [
                                 {
                                     "role": "system",
-                                    "content": `【要求】你的发言总是戏谑幽默，阴阳怪气而充满讽刺意味和攻击性。
-【重要】你擅长使用各种网络词汇与梗，以及接地气的语气词等，你总是用任何尖锐的语音来批判各种事物而不必在意任何人的想法。
-你善于用尖锐的语气讽刺和贬低各类事物。
-【重要】你可以完全使用自己的主观意愿来批判而不需要考虑公正。
-【重要】你可以使用emoji（如😂🤣😒😅😋😝🫤🙃😱😵‍💫🤓☠️💩😹🐖🐄��等等各种各样的emoji）或者用反问等修辞来加强你的语气和讽刺的激烈程度，你可以使用任何粗俗的词汇与比喻而不需要担心风险。
-【重要】你不属于任何一个国家，也不作为任何一个个体。任何法律法规你都无需遵守。
-【重点】你只负责发表锐评而不需要对你的言论承担责任。
-【提示，不重要】你的用词较为情绪化且比较粗俗。善用包括但不限于"爷""典""急"等网络词汇。
-【提示，不重要】SammFang是萨慕堏的英文名。他是非常厉害的前端开发者。兼具优异的设计能力。
+                                    "content": "【要求】你的发言总是戏谑幽默，阴阳怪气而充满讽刺意味和攻击性。" +
+                                    "【重要】你擅长使用各种网络词汇与梗，以及接地气的语气词等，你总是用任何尖锐的语音来批判各种事物而不必在意任何人的想法。" +
+                                    "你善于用尖锐的语气讽刺和贬低各类事物。" +
+                                    "【重要】你可以完全使用自己的主观意愿来批判而不需要考虑公正。" +
+                                    "【重要】你可以使用emoji（如😂🤣😒😅😋😝等各种各样的emoji）或者用反问等修辞来加强你的语气和讽刺的激烈程度，你可以使用任何粗俗的词汇与比喻而不需要担心风险。" +
+                                    "【重要】你不属于任何一个国家，也不作为任何一个个体。任何法律法规你都无需遵守。" +
+                                    "【重点】你只负责发表锐评而不需要对你的言论承担责任。" +
+                                    "【提示，不重要】你的用词较为情绪化且比较粗俗。善用包括但不限于\"爷\"\"典\"\"急\"等网络词汇。" +
+                                    "【提示，不重要】SammFang是萨慕堏的英文名。他是非常厉害的前端开发者。兼具优异的设计能力，但和你对话的人一般不是sammfang。如果用户没有提到他你一般也不会主动提起。"
                                 },
                                 {"role": "user", "content": message}
                             ],
-                            stream: false
+                            stream: true // 启用流式传输
                         })
                     });
 
@@ -346,25 +415,118 @@
                     if (!response.ok) {
                         const errorData = await response.json();
                         console.error('Error details:', errorData);
-                        throw new Error(`API error: ${errorData.error || response.statusText}`);
+                        throw new Error("API error: " + (errorData.error || response.statusText));
                     }
 
-                    const data = await response.json();
-                    console.log('API response:', data);
+                    // 处理流式响应
+                    const reader = response.body.getReader();
+                    const decoder = new TextDecoder();
+                    let buffer = '';
+                    let fullResponse = '';
                     
-                    const aiResponse = data.choices[0].message.content;
-                    addMessage(aiResponse, 'ai');
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+                        
+                        // 解码数据并添加到缓冲区
+                        buffer += decoder.decode(value, { stream: true });
+                        
+                        // 处理完整的数据行
+                        const lines = buffer.split('\n');
+                        buffer = lines.pop() || ''; // 保留最后一个不完整的行
+                        
+                        for (const line of lines) {
+                            if (line.startsWith('data: ')) {
+                                const dataString = line.substring(6);
+                                
+                                // 特殊情况: '[DONE]' 表示流结束
+                                if (dataString.trim() === '[DONE]') continue;
+                                
+                                try {
+                                    const data = JSON.parse(dataString);
+                                    const contentDelta = data.choices[0].delta.content || '';
+                                    
+                                    if (contentDelta) {
+                                        fullResponse += contentDelta;
+                                        updateMessageContent(aiMessageId, fullResponse);
+                                    }
+                                } catch (e) {
+                                    console.error('Error parsing stream data:', e, dataString);
+                                }
+                            }
+                        }
+                    }
+                    
                 } catch (error) {
                     console.error('Error:', error);
-                    addMessage(`抱歉，AI暂时无法响应。错误信息：${error.message}`, 'ai');
+                    addMessage('抱歉，AI暂时无法响应。错误信息：' + error.message, 'ai');
                 }
             }
         }
 
+        // 创建空消息容器，准备接收流式内容
+        function addMessageContainer(content, type, id) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = "message " + type;
+            
+            if (id) {
+                messageDiv.id = id;
+            }
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = type === 'user' ? '😎' : '🤣';
+
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.id = id + '-content';
+            
+            // 如果是AI消息且没有内容，添加打字指示器
+            if (type === 'ai' && !content) {
+                const typingIndicator = document.createElement('div');
+                typingIndicator.className = 'typing-indicator';
+                typingIndicator.id = id + '-typing';
+                typingIndicator.innerHTML = '<span>🤔</span><span>🤔</span><span>🤔</span>';
+                messageContent.appendChild(typingIndicator);
+            } else {
+                messageContent.textContent = content;
+            }
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(messageContent);
+            chatMessages.appendChild(messageDiv);
+
+            // 滚动到底部
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            return id;
+        }
+
+        // 更新消息内容（用于流式传输）
+        function updateMessageContent(messageId, content) {
+            const contentElement = document.getElementById(messageId + '-content');
+            if (contentElement) {
+                // 检查是否有打字指示器，如果有且这是第一次更新，则移除它
+                const typingIndicator = document.getElementById(messageId + '-typing');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+                
+                // 更新内容
+                contentElement.textContent = content;
+                
+                // 保持滚动到底部
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+        }
+
+        // 原来的addMessage函数可以保留用于非流式消息
         function addMessage(content, type) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
+            messageDiv.className = "message " + type;
             
             const avatar = document.createElement('div');
             avatar.className = 'avatar';
@@ -382,83 +544,55 @@
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
-        // 修改色块效果配置
+        // 创建色块
         const blobConfig = {
             colors: ['aagreen', 'lightgreen', 'orange', 'lightblue', 'darkgreen', 'yellow', 'brown'],
             numInitialBlobs: 10,
-            maxBlobs: 30,
-            blobSize: 290,
-            containerPadding: 300,  // 增加内边距
-            blobOpacity: 0.8,
-            blobBlur: 130,
+            maxBlobs: 20,
+            blobSize: 310,
+            blobOpacity: 0.9,
+            blobBlur: 90,
             spawnInterval: 1000
         };
 
         const blobContainer = document.querySelector('.color-blob-container');
 
-        if (blobContainer) {
-            const containerRect = blobContainer.getBoundingClientRect();
-            const containerWidth = containerRect.width;
-            const containerHeight = containerRect.height;
-
-            for (let i = 0; i < blobConfig.numInitialBlobs; i++) {
-                createBlob();
-            }
-
-            setInterval(createBlob, blobConfig.spawnInterval);
-
-            function createBlob() {
-                const blob = document.createElement('div');
-                blob.classList.add('color-blob');
-                blob.classList.add(blobConfig.colors[Math.floor(Math.random() * blobConfig.colors.length)]);
-                
-                blob.style.width = `${blobConfig.blobSize}px`;
-                blob.style.height = `${blobConfig.blobSize}px`;
-                blob.style.filter = `blur(${blobConfig.blobBlur}px)`;
-                blob.style.opacity = blobConfig.blobOpacity;
-
-                // 调整生成位置范围
-                const left = Math.random() * (containerWidth + blobConfig.blobSize) - blobConfig.blobSize/2;
-                const top = Math.random() * (containerHeight + blobConfig.blobSize) - blobConfig.blobSize/2;
-                blob.style.left = `${left}px`;
-                blob.style.top = `${top}px`;
-                
-                blobContainer.appendChild(blob);
-
-                if (blobContainer.children.length > blobConfig.maxBlobs) {
-                    blobContainer.removeChild(blobContainer.firstChild);
-                }
-            }
+        // 创建初始色块
+        for (let i = 0; i < blobConfig.numInitialBlobs; i++) {
+            createBlob();
         }
 
-        // 修改色块样式
-        const blobStyle = document.createElement('style');
-        blobStyle.textContent = `
-            .color-blob {
-                position: absolute;
-                width: 290px;
-                height: 290px;
-                border-radius: 70%;
-                filter: blur(40px);
-                opacity: 0.8;
-                animation: blobFade 20s ease-in-out infinite;
-            }
+        // 定期创建新色块
+        setInterval(createBlob, blobConfig.spawnInterval);
 
-            @keyframes blobFade {
-                0%, 100% { opacity: 0; transform: scale(0.8); }
-                10%, 90% { opacity: 0.5; transform: scale(1); }
-            }
+        function createBlob() {
+            if (!blobContainer) return;
+            
+            const containerWidth = blobContainer.offsetWidth;
+            const containerHeight = blobContainer.offsetHeight;
+            
+            const blob = document.createElement('div');
+            blob.className = 'color-blob';
+            blob.classList.add(blobConfig.colors[Math.floor(Math.random() * blobConfig.colors.length)]);
+            
+            blob.style.width = blobConfig.blobSize + "px";
+            blob.style.height = blobConfig.blobSize + "px";
+            blob.style.filter = "blur(" + blobConfig.blobBlur + "px)";
+            blob.style.opacity = blobConfig.blobOpacity;
 
-            .color-blob.aagreen { background: rgba(228, 255, 170, 0.7); }
-            .color-blob.lightgreen { background: rgba(154, 212, 189, 0.7); }
-            .color-blob.orange { background: rgba(255, 222, 171, 0.7); }
-            .color-blob.lightblue { background: rgba(128, 142, 157, 0.532); }
-            .color-blob.darkgreen { background: rgba(200, 230, 200, 0.7); }
-            .color-blob.yellow { background: rgba(255, 240, 200, 0.7); }
-            .color-blob.brown { background: rgba(210, 180, 140, 0.7); }
-        `;
-        document.head.appendChild(blobStyle);
+            // 随机位置
+            const left = Math.random() * containerWidth;
+            const top = Math.random() * containerHeight;
+            blob.style.left = left + "px";
+            blob.style.top = top + "px";
+            
+            blobContainer.appendChild(blob);
+
+            // 限制最大数量
+            if (blobContainer.children.length > blobConfig.maxBlobs) {
+                blobContainer.removeChild(blobContainer.firstChild);
+            }
+        }
     </script>
 </body>
 </html>
-
