@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>媒体工具箱 | SammFang</title>
+    <style>
+        /* 继承主页的全局样式 */
+        body {
+            font-family: "Source Han Serif", "Fangzheng Songti", serif;
+            margin: 0;
+            padding: 0;
+            background-color: #FAF9F6;
+            color: #4A3F35;
+            font-weight: 600;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background-color: #E5E5E5;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        nav ul li {
+            margin-left: 20px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #4A3F35;
+        }
+
+        /* 工具箱特定样式 */
+        .tools-container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+
+        .tool-section {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .tool-section h2 {
+            margin-top: 0;
+            color: #4A3F35;
+            font-size: 24px;
+        }
+
+        .drop-zone {
+            border: 2px dashed #4A3F35;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .drop-zone:hover {
+            background-color: #f5f5f5;
+        }
+
+        .format-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .format-button {
+            padding: 10px 20px;
+            background-color: #4A3F35;
+            color: #FAF9F6;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .format-button:hover {
+            background-color: #2F4F4F;
+        }
+
+        .format-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .media-player {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            display: none;
+        }
+
+        .compression-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .compression-button {
+            padding: 10px 20px;
+            background-color: #4A3F35;
+            color: #FAF9F6;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .compression-button:hover {
+            background-color: #2F4F4F;
+        }
+
+        #progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            margin-top: 20px;
+            overflow: hidden;
+            display: none;
+        }
+
+        #progress {
+            width: 0%;
+            height: 100%;
+            background-color: #4A3F35;
+            transition: width 0.3s ease;
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f5f5f5;
+            border-radius: 5px;
+            display: none;
+        }
+
+        /* 改进播放器相关样式 */
+        .media-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .play-button {
+            padding: 12px 25px;
+            background-color: #4A3F35;
+            color: #FAF9F6;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .play-button i {
+            font-size: 16px;
+        }
+        
+        .play-button:hover {
+            background-color: #2F4F4F;
+        }
+        
+        .player-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            display: none;
+        }
+        
+        /* 处理选项样式 */
+        .processing-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        
+        .option-group {
+            margin: 10px 0;
+        }
+        
+        .option-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        
+        .status-success {
+            background-color: #e6f7e6;
+            color: #2e7d32;
+        }
+        
+        .status-error {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">SF</div>
+        <nav>
+            <ul>
+                <li><a href="index.html">返回首页</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <div class="tools-container">
+        <div class="tool-section">
+            <h2>媒体转换器</h2>
+            <div class="drop-zone" id="dropZone">
+                <p>拖放文件到这里或点击选择文件</p>
+                <input type="file" id="fileInput" style="display: none">
+            </div>
+            <div class="file-info" id="fileInfo"></div>
+            
+            <!-- 添加媒体控制区域 -->
+            <div class="media-controls" id="mediaControls" style="display: none;">
+                <button class="play-button" id="playButton"><i class="fas fa-play"></i> 播放</button>
+            </div>
+            
+            <!-- 改进播放器容器 -->
+            <div class="player-container" id="playerContainer">
+                <video class="media-player" id="mediaPlayer" controls></video>
+                <audio class="media-player" id="audioPlayer" controls style="display:none;"></audio>
+            </div>
+            
+            <div class="format-buttons" id="formatButtons"></div>
+            
+            <!-- 添加处理选项区域 -->
+            <div class="processing-options" id="processingOptions" style="display: none;">
+                <div class="option-group" id="videoOptions" style="display: none;">
+                    <label>视频处理选项</label>
+                    <button class="format-button" id="extractAudioBtn">提取音频</button>
+                    <button class="format-button" id="compressVideoBtn">压缩视频</button>
+                </div>
+                <div class="option-group" id="audioOptions" style="display: none;">
+                    <label>音频处理选项</label>
+                    <button class="format-button" id="normalizeAudioBtn">音量标准化</button>
+                </div>
+            </div>
+            
+            <div id="progress-bar">
+                <div id="progress"></div>
+            </div>
+            
+            <div class="status-message" id="statusMessage"></div>
+        </div>
+
+        <div class="tool-section">
+            <h2>图像压缩</h2>
+            <div class="drop-zone" id="imageDropZone">
+                <p>拖放图片到这里或点击选择图片</p>
+                <input type="file" id="imageInput" accept="image/*" style="display: none">
+            </div>
+            <div class="compression-options">
+                <button class="compression-button" data-size="10">压缩至10MB</button>
+                <button class="compression-button" data-size="3">压缩至3MB</button>
+                <button class="compression-button" data-size="0.5">压缩至500KB</button>
+                <button class="compression-button" data-size="0.024">压缩至24KB</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
+    <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+    <script>
+        // FFmpeg 初始化
+        const { createFFmpeg, fetchFile } = FFmpeg;
+        const ffmpeg = createFFmpeg({ log: true });
+
+        // 页面加载时加载FFmpeg
+        (async () => {
+            await ffmpeg.load();
+        })();
+
+        // 文件拖放和选择处理
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const formatButtons = document.getElementById('formatButtons');
+        const mediaPlayer = document.getElementById('mediaPlayer');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playerContainer = document.getElementById('playerContainer');
+        const progressBar = document.getElementById('progress-bar');
+        const progress = document.getElementById('progress');
+        const fileInfo = document.getElementById('fileInfo');
+        const mediaControls = document.getElementById('mediaControls');
+        const playButton = document.getElementById('playButton');
+        const processingOptions = document.getElementById('processingOptions');
+        const videoOptions = document.getElementById('videoOptions');
+        const audioOptions = document.getElementById('audioOptions');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // 显示状态消息函数
+        function showStatusMessage(message, isError = false) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message ' + (isError ? 'status-error' : 'status-success');
+            statusMessage.style.display = 'block';
+            
+            // 5秒后自动隐藏
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 5000);
+        }
+
+        // 支持的格式
+        const supportedFormats = {
+            video: ['.mp4', '.avi', '.mov', '.mkv', '.webm'],
+            audio: ['.mp3', '.wav', '.ogg', '.aac', '.flac'],
+            image: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.tiff']
+        };
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = '#f5f5f5';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.backgroundColor = '';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.backgroundColor = '';
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+            
+            // 重置界面状态
+            mediaControls.style.display = 'none';
+            playerContainer.style.display = 'none';
+            mediaPlayer.style.display = 'none';
+            audioPlayer.style.display = 'none';
+            processingOptions.style.display = 'none';
+            videoOptions.style.display = 'none';
+            audioOptions.style.display = 'none';
+            
+            // 显示文件信息
+            fileInfo.style.display = 'block';
+            fileInfo.textContent = `文件名: ${file.name} | 大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`;
+            
+            // 清除之前的按钮
+            formatButtons.innerHTML = '';
+            
+            const extension = '.' + file.name.split('.').pop().toLowerCase();
+            
+            // 根据文件类型显示不同的转换选项和控制
+            if (supportedFormats.video.includes(extension)) {
+                addFormatButtons(['mp4', 'webm', 'gif', 'mov', 'avi']);
+                setupMediaPreview(file, 'video');
+                mediaControls.style.display = 'flex';
+                processingOptions.style.display = 'block';
+                videoOptions.style.display = 'block';
+                
+                // 设置视频处理按钮事件
+                document.getElementById('extractAudioBtn').onclick = () => extractAudio(file);
+                document.getElementById('compressVideoBtn').onclick = () => compressVideo(file);
+                
+            } else if (supportedFormats.audio.includes(extension)) {
+                addFormatButtons(['mp3', 'wav', 'ogg', 'aac', 'flac']);
+                setupMediaPreview(file, 'audio');
+                mediaControls.style.display = 'flex';
+                processingOptions.style.display = 'block';
+                audioOptions.style.display = 'block';
+                
+                // 设置音频处理按钮事件
+                document.getElementById('normalizeAudioBtn').onclick = () => normalizeAudio(file);
+                
+            } else if (supportedFormats.image.includes(extension)) {
+                addFormatButtons(['jpg', 'png', 'webp', 'gif']);
+                showImagePreview(file);
+            } else {
+                showStatusMessage(`不支持的文件格式: ${extension}`, true);
+            }
+        }
+
+        function setupMediaPreview(file, type) {
+            const url = URL.createObjectURL(file);
+            
+            if (type === 'video') {
+                mediaPlayer.src = url;
+                mediaPlayer.style.display = 'block';
+                audioPlayer.style.display = 'none';
+            } else if (type === 'audio') {
+                audioPlayer.src = url;
+                audioPlayer.style.display = 'block';
+                mediaPlayer.style.display = 'none';
+            }
+            
+            playerContainer.style.display = 'block';
+            
+            // 设置播放按钮
+            playButton.onclick = function() {
+                if (type === 'video') {
+                    if (mediaPlayer.paused) {
+                        mediaPlayer.play();
+                        playButton.innerHTML = '<i class="fas fa-pause"></i> 暂停';
+                    } else {
+                        mediaPlayer.pause();
+                        playButton.innerHTML = '<i class="fas fa-play"></i> 播放';
+                    }
+                } else if (type === 'audio') {
+                    if (audioPlayer.paused) {
+                        audioPlayer.play();
+                        playButton.innerHTML = '<i class="fas fa-pause"></i> 暂停';
+                    } else {
+                        audioPlayer.pause();
+                        playButton.innerHTML = '<i class="fas fa-play"></i> 播放';
+                    }
+                }
+            };
+            
+            // 监听播放状态变化
+            const updatePlayButton = function(isPlaying) {
+                playButton.innerHTML = isPlaying ? 
+                    '<i class="fas fa-pause"></i> 暂停' : 
+                    '<i class="fas fa-play"></i> 播放';
+            };
+            
+            mediaPlayer.onplay = () => updatePlayButton(true);
+            mediaPlayer.onpause = () => updatePlayButton(false);
+            audioPlayer.onplay = () => updatePlayButton(true);
+            audioPlayer.onpause = () => updatePlayButton(false);
+        }
+
+        function showImagePreview(file) {
+            const url = URL.createObjectURL(file);
+            mediaPlayer.src = url;
+            mediaPlayer.controls = false; // 图片不需要控制条
+            mediaPlayer.style.display = 'block';
+            playerContainer.style.display = 'block';
+        }
+
+        function addFormatButtons(formats) {
+            formats.forEach(format => {
+                const button = document.createElement('button');
+                button.className = 'format-button';
+                button.textContent = `转换为${format.toUpperCase()}`;
+                button.onclick = () => convertFile(format);
+                formatButtons.appendChild(button);
+            });
+        }
+
+        async function convertFile(format) {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            progressBar.style.display = 'block';
+            progress.style.width = '0%';
+
+            try {
+                const inputFileName = 'input' + '.' + file.name.split('.').pop();
+                const outputFileName = 'output.' + format;
+
+                ffmpeg.FS('writeFile', inputFileName, await fetchFile(file));
+
+                // 转换进度更新
+                ffmpeg.setProgress(({ ratio }) => {
+                    progress.style.width = (ratio * 100) + '%';
+                });
+
+                // 执行转换
+                await ffmpeg.run('-i', inputFileName, outputFileName);
+
+                // 获取输出文件
+                const data = ffmpeg.FS('readFile', outputFileName);
+                
+                // 创建下载链接
+                const blob = new Blob([data.buffer], { type: `video/${format}` });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `converted.${format}`;
+                a.click();
+
+                // 清理
+                URL.revokeObjectURL(url);
+                ffmpeg.FS('unlink', inputFileName);
+                ffmpeg.FS('unlink', outputFileName);
+
+            } catch (error) {
+                console.error('转换失败:', error);
+                alert('转换失败，请重试');
+            }
+
+            progressBar.style.display = 'none';
+        }
+
+        // 提取音频功能
+        async function extractAudio(file) {
+            try {
+                progressBar.style.display = 'block';
+                progress.style.width = '0%';
+                
+                const inputFileName = 'input.' + file.name.split('.').pop();
+                const outputFileName = 'output.mp3';
+                
+                ffmpeg.FS('writeFile', inputFileName, await fetchFile(file));
+                
+                ffmpeg.setProgress(({ ratio }) => {
+                    progress.style.width = (ratio * 100) + '%';
+                });
+                
+                // 执行音频提取
+                await ffmpeg.run('-i', inputFileName, '-vn', '-acodec', 'libmp3lame', '-q:a', '2', outputFileName);
+                
+                // 获取输出文件
+                const data = ffmpeg.FS('readFile', outputFileName);
+                
+                // 创建下载链接
+                const blob = new Blob([data.buffer], { type: 'audio/mp3' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name.split('.')[0] + '.mp3';
+                a.click();
+                
+                // 清理
+                URL.revokeObjectURL(url);
+                ffmpeg.FS('unlink', inputFileName);
+                ffmpeg.FS('unlink', outputFileName);
+                
+                showStatusMessage('音频提取成功！');
+            } catch (error) {
+                console.error('音频提取失败:', error);
+                showStatusMessage('音频提取失败，请重试', true);
+            }
+            
+            progressBar.style.display = 'none';
+        }
+        
+        // 压缩视频功能
+        async function compressVideo(file) {
+            try {
+                progressBar.style.display = 'block';
+                progress.style.width = '0%';
+                
+                const inputFileName = 'input.' + file.name.split('.').pop();
+                const outputFileName = 'compressed.mp4';
+                
+                ffmpeg.FS('writeFile', inputFileName, await fetchFile(file));
+                
+                ffmpeg.setProgress(({ ratio }) => {
+                    progress.style.width = (ratio * 100) + '%';
+                });
+                
+                // 执行视频压缩
+                await ffmpeg.run(
+                    '-i', inputFileName,
+                    '-vcodec', 'libx264',
+                    '-crf', '28', // 压缩率，值越大压缩越多，质量越低
+                    '-preset', 'medium', 
+                    '-acodec', 'aac',
+                    '-strict', 'experimental',
+                    outputFileName
+                );
+                
+                // 获取输出文件
+                const data = ffmpeg.FS('readFile', outputFileName);
+                
+                // 创建下载链接
+                const blob = new Blob([data.buffer], { type: 'video/mp4' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name.split('.')[0] + '_compressed.mp4';
+                a.click();
+                
+                // 清理
+                URL.revokeObjectURL(url);
+                ffmpeg.FS('unlink', inputFileName);
+                ffmpeg.FS('unlink', outputFileName);
+                
+                showStatusMessage('视频压缩成功！');
+            } catch (error) {
+                console.error('视频压缩失败:', error);
+                showStatusMessage('视频压缩失败，请重试', true);
+            }
+            
+            progressBar.style.display = 'none';
+        }
+        
+        // 音频音量标准化功能
+        async function normalizeAudio(file) {
+            try {
+                progressBar.style.display = 'block';
+                progress.style.width = '0%';
+                
+                const inputFileName = 'input.' + file.name.split('.').pop();
+                const outputFileName = 'normalized.' + file.name.split('.').pop();
+                
+                ffmpeg.FS('writeFile', inputFileName, await fetchFile(file));
+                
+                ffmpeg.setProgress(({ ratio }) => {
+                    progress.style.width = (ratio * 100) + '%';
+                });
+                
+                // 执行音频标准化
+                await ffmpeg.run(
+                    '-i', inputFileName,
+                    '-filter:a', 'loudnorm=I=-16:LRA=11:TP=-1.5',
+                    outputFileName
+                );
+                
+                // 获取输出文件
+                const data = ffmpeg.FS('readFile', outputFileName);
+                
+                // 创建下载链接
+                const blob = new Blob([data.buffer], { type: 'audio/' + file.name.split('.').pop() });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name.split('.')[0] + '_normalized.' + file.name.split('.').pop();
+                a.click();
+                
+                // 清理
+                URL.revokeObjectURL(url);
+                ffmpeg.FS('unlink', inputFileName);
+                ffmpeg.FS('unlink', outputFileName);
+                
+                showStatusMessage('音频标准化成功！');
+            } catch (error) {
+                console.error('音频标准化失败:', error);
+                showStatusMessage('音频标准化失败，请重试', true);
+            }
+            
+            progressBar.style.display = 'none';
+        }
+
+        // 图像压缩功能
+        const imageDropZone = document.getElementById('imageDropZone');
+        const imageInput = document.getElementById('imageInput');
+
+        imageDropZone.addEventListener('click', () => imageInput.click());
+        imageDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageDropZone.style.backgroundColor = '#f5f5f5';
+        });
+
+        imageDropZone.addEventListener('dragleave', () => {
+            imageDropZone.style.backgroundColor = '';
+        });
+
+        imageDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageDropZone.style.backgroundColor = '';
+            handleImageFile(e.dataTransfer.files[0]);
+        });
+
+        imageInput.addEventListener('change', (e) => {
+            handleImageFile(e.target.files[0]);
+        });
+
+        function handleImageFile(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const compressionButtons = document.querySelectorAll('.compression-button');
+                    compressionButtons.forEach(button => {
+                        button.onclick = () => compressImage(img, parseFloat(button.dataset.size));
+                    });
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function compressImage(img, targetSizeMB) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置初始尺寸
+            let width = img.width;
+            let height = img.height;
+            
+            // 如果图片太大，先进行缩放
+            const MAX_WIDTH = 1920;
+            const MAX_HEIGHT = 1080;
+            
+            if (width > MAX_WIDTH) {
+                height = (MAX_WIDTH * height) / width;
+                width = MAX_WIDTH;
+            }
+            if (height > MAX_HEIGHT) {
+                width = (MAX_HEIGHT * width) / height;
+                height = MAX_HEIGHT;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // 绘制图片
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // 压缩
+            let quality = 0.9;
+            let iteration = 0;
+            const MAX_ITERATIONS = 10;
+            
+            const compress = () => {
+                const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                const bytes = atob(dataUrl.split(',')[1]).length;
+                const sizeMB = bytes / 1024 / 1024;
+                
+                if (sizeMB > targetSizeMB && iteration < MAX_ITERATIONS) {
+                    quality *= 0.9;
+                    iteration++;
+                    compress();
+                } else {
+                    // 创建下载链接
+                    const a = document.createElement('a');
+                    a.href = dataUrl;
+                    a.download = `compressed_${targetSizeMB}MB.jpg`;
+                    a.click();
+                }
+            };
+            
+            compress();
+        }
+    </script>
+</body>
+</html> 
